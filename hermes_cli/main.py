@@ -528,6 +528,88 @@ def _resolve_last_cli_session() -> Optional[str]:
     return None
 
 
+def _exec_in_container(container_info: dict, cli_args: list):
+    """Route a CLI invocation into the managed container.
+
+    Uses subprocess.run so we can detect docker-level failures (container
+    not running, user not found, etc.) and retry. On the happy path the
+    exit code from the containerised hermes is propagated directly.
+
+    Failure behaviour:
+    - TTY: spinner for up to 5s, then hard fail (exit 1)
+    - Non-TTY: silent retry for 10s, then exit 126
+
+    Args:
+        container_info: dict with backend, container_name, exec_user, hermes_bin
+        cli_args: the original CLI arguments (everything after 'hermes')
+    """
+    import shutil
+    import subprocess
+    import time
+
+    backend = container_info["backend"]
+    container_name = container_info["container_name"]
+    exec_user = container_info["exec_user"]
+    hermes_bin = container_info["hermes_bin"]
+
+    runtime = shutil.which(backend)
+    if not runtime:
+        print(f"Error: {backend} not found on PATH. Cannot route to container.",
+              file=sys.stderr)
+        sys.exit(1)
+
+    is_tty = sys.stdin.isatty()
+    tty_flags = ["-it"] if is_tty else ["-i"]
+
+    # Forward terminal environment variables
+    env_flags = []
+    for var in ("TERM", "COLORTERM", "LANG", "LC_ALL"):
+        val = os.environ.get(var)
+        if val:
+            env_flags.extend(["-e", f"{var}={val}"])
+
+    exec_cmd = (
+        [runtime, "exec"]
+        + tty_flags
+        + ["-u", exec_user]
+        + env_flags
+        + [container_name, hermes_bin]
+        + cli_args
+    )
+
+    max_retries = 5 if is_tty else 10
+    for attempt in range(max_retries):
+        result = subprocess.run(exec_cmd)
+        if result.returncode == 0:
+            sys.exit(0)
+
+        # Exit code 125/126/127 from docker exec = container-level failure
+        # (not running, user not found, command not found). Retry these.
+        if result.returncode not in (125, 126, 127):
+            # Hermes itself exited non-zero — propagate as-is
+            sys.exit(result.returncode)
+
+        # Container-level failure — retry
+        if attempt < max_retries - 1:
+            if is_tty and attempt == 0:
+                print("Waiting for container...", end="", flush=True,
+                      file=sys.stderr)
+            elif is_tty:
+                print(".", end="", flush=True, file=sys.stderr)
+            time.sleep(1)
+        else:
+            if is_tty:
+                print(file=sys.stderr)  # newline after dots
+                print(
+                    f"Error: container '{container_name}' is not reachable "
+                    f"via {backend}. Is the hermes-agent service running?",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            else:
+                sys.exit(126)
+
+
 def _resolve_session_by_name_or_id(name_or_id: str) -> Optional[str]:
     """Resolve a session name (title) or ID to a session ID.
 
@@ -5633,7 +5715,21 @@ Examples:
     # e.g. ``hermes -c Pokemon Agent Dev`` → ``hermes -c 'Pokemon Agent Dev'``
     _processed_argv = _coalesce_session_name_args(sys.argv[1:])
     args = parser.parse_args(_processed_argv)
-    
+
+    # ── Container-aware routing ────────────────────────────────────────
+    # When NixOS container mode is active, route ALL subcommands into
+    # the managed container. This runs before any subcommand dispatch.
+    try:
+        from hermes_cli.config import get_container_exec_info
+        container_info = get_container_exec_info()
+        if container_info:
+            _exec_in_container(container_info, sys.argv[1:])
+            sys.exit(1)  # exec failed if we reach here
+    except SystemExit:
+        raise  # Re-raise sys.exit from _exec_in_container
+    except Exception:
+        pass  # Container routing unavailable, proceed locally
+
     # Handle --version flag
     if args.version:
         cmd_version(args)
