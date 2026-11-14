@@ -82,7 +82,7 @@ def test_the_wait_is_bounded_and_ctrl_c_stops_it():
     import threading
     from hermes_cli.gateway_owner_restart import SuccessorWaitStopped, wait_for_successor
 
-    def refuse():
+    def refuse(_remaining):
         raise GatewayRPCError("runtime_retired")
     now = [0.0]
 
