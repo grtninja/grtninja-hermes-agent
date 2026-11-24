@@ -884,3 +884,23 @@ def test_a_home_resolved_with_names_kept_live_reads_itself_as_hermes_home(tmp_pa
                                           live_names=lambda name: name.startswith("PIN_G") or name == "HERMES_HOME")
 
     assert (kept["PIN_HREF"], kept["PIN_GH"]) == (f"{home}/ref", f"{home}/g")
+
+
+@pytest.mark.parametrize("key", ["BRV_API_KEY", "RETAINDB_API_KEY", "RETAINDB_BASE_URL"])
+def test_reload_env_clears_a_deleted_labs_memory_provider_key(tmp_path, monkeypatch, key):
+    """ByteRover/RetainDB left core with no setup prompt, but `/reload` after deleting their key from
+    .env must still drop it from the running process, as it did while they were bundled."""
+    home = tmp_path / "hermes"
+    home.mkdir()
+    (home / ".env").write_text("RELOAD_TEST_KEY=kept\n", encoding="utf-8")
+    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv(key, "deleted-from-dotenv")
+
+    from hermes_cli import config as cfg
+    cfg.invalidate_env_cache()
+    try:
+        cfg.reload_env()
+    finally:
+        cfg.invalidate_env_cache()
+
+    assert key not in os.environ
