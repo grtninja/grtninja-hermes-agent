@@ -5,7 +5,7 @@ import subprocess
 import textwrap
 
 
-def test_container_sets_hosted_write_policy_env(built_image: str) -> None:
+def test_container_sets_hosted_write_policy_env(product_image: str) -> None:
     script = (
         'test "$HERMES_HOME" = "/opt/data" && '
         'test "$HERMES_WRITE_SAFE_ROOT" = "/opt/data" && '
@@ -15,7 +15,7 @@ def test_container_sets_hosted_write_policy_env(built_image: str) -> None:
         'test "$PYTHONDONTWRITEBYTECODE" = "1"'
     )
     result = subprocess.run(
-        ["docker", "run", "--rm", "--entrypoint", "sh", built_image, "-c", script],
+        ["docker", "run", "--rm", "--entrypoint", "sh", product_image, "-c", script],
         capture_output=True,
         text=True,
         timeout=60,

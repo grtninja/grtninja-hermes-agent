@@ -5,8 +5,9 @@ and exercise it via ``docker run``. They skip when Docker is unavailable
 (e.g. on developer laptops without a daemon).
 
 Override the image with ``HERMES_TEST_IMAGE`` env var to point at a pre-built
-image (faster local iteration); otherwise the ``built_image`` fixture builds
-the repo's Dockerfile once per session.
+image (faster local iteration); otherwise the ``product_image`` fixture builds
+the repo's Dockerfile once per session. ``built_image`` runs on a thin layer of
+it that never fetches catalog plugins at boot.
 
 """
 from __future__ import annotations
@@ -20,6 +21,7 @@ from collections.abc import Iterator
 import pytest
 
 IMAGE_TAG = os.environ.get("HERMES_TEST_IMAGE", "hermes-agent-harness:latest")
+HERMETIC_IMAGE_TAG = "hermes-agent-harness-hermetic:latest"
 
 
 def _docker_available() -> bool:
@@ -50,11 +52,11 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(scope="session")
-def built_image() -> str:
-    """Build the image once per test session.
+def product_image() -> str:
+    """The image as shipped, built once per test session.
 
     Override with ``HERMES_TEST_IMAGE`` env var to point at a pre-built
-    image (faster local iteration).
+    image (faster local iteration). Most tests want :func:`built_image`.
     """
     if os.environ.get("HERMES_TEST_IMAGE"):
         return IMAGE_TAG
@@ -70,6 +72,28 @@ def built_image() -> str:
         f"docker build failed:\n{result.stderr[-2000:]}"
     )
     return IMAGE_TAG
+
+
+@pytest.fixture(scope="session")
+def built_image(product_image: str) -> str:
+    """:func:`product_image` with unattended plugin fetches turned off.
+
+    Default catalog plugins come from the LIVE catalog, so a container that
+    fetched them at boot would tie every test here to whatever was published
+    last: stage2's foreground default-plugin install (~50 s once Weixin and
+    QQ Bot went default) pushed cont-init past the 30 s readiness window.
+    """
+    # ``docker commit`` of a never-started container, not ``docker build``: CI's buildx builder cannot
+    # see an image that exists only in the local daemon, so a FROM on it would try to pull.
+    holder = f"hermes-hermetic-layer-{os.getpid()}"
+    subprocess.run(["docker", "create", "--name", holder, product_image],
+                   check=True, capture_output=True, timeout=60)
+    try:
+        subprocess.run(["docker", "commit", "--change", "ENV HERMES_DISABLE_LAZY_INSTALLS=1",
+                        holder, HERMETIC_IMAGE_TAG], check=True, capture_output=True, timeout=120)
+    finally:
+        subprocess.run(["docker", "rm", "-f", holder], capture_output=True, timeout=30, check=False)
+    return HERMETIC_IMAGE_TAG
 
 
 @pytest.fixture
