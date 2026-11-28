@@ -46,15 +46,18 @@ def control(home, verb, params=None, timeout=10):
     return reply['result']
 
 
-def rescan(home):
-    """``rescan-profiles`` until it reports a finished pass.
+def rescan(home, expect_parked):
+    """``rescan-profiles`` once; the sorted names it parked.
 
     The verb answers ``pending`` (no ``parked``) when the reconcile outlasts its 5 s bound, which a
-    loaded runner hits; the next request queues on the reconcile lock and returns that pass."""
-    def finished():
-        result = control(home, 'rescan-profiles')
-        return None if result.get('pending') else result
-    return wait_until(finished, timeout=60, what='rescan-profiles to finish a pass')
+    loaded runner hits. That pass keeps running, so read its verdict from ``identify`` instead of
+    queueing another pass behind the reconcile lock."""
+    result = control(home, 'rescan-profiles')
+    if not result.get('pending'):
+        return sorted(result['parked'])
+    wait_until(lambda: set(expect_parked) <= set(control(home, 'identify').get('parked_profiles', {})),
+               timeout=60, what=f'the pending rescan to park {expect_parked}')
+    return sorted(expect_parked)
 
 
 @pytest.fixture
@@ -302,9 +305,9 @@ def test_invalid_hot_profile_config_is_parked_and_unserved(mux):
         added = root / 'profiles' / 'invalid-hot'
         added.mkdir(parents=True, mode=0o700)
         (added / 'config.yaml').write_text(json.dumps(invalid), encoding='utf-8')
-        result = rescan(root)
+        parked = rescan(root, ['invalid-hot'])
         desc = control(root, 'identify')
-        assert result['parked'] == ['invalid-hot'], (result, tail(mux))
+        assert parked == ['invalid-hot'], (parked, tail(mux))
         assert added.resolve() not in served_homes(desc), desc
         assert 'invalid-hot' in desc.get('parked_profiles', {}), desc
         wait_recorded(root, lambda r: 'invalid-hot' not in r, 'invalid-hot never recorded')
@@ -313,11 +316,11 @@ def test_invalid_hot_profile_config_is_parked_and_unserved(mux):
         # into an invalid configuration.
         assert mux['boot'].resolve() in served_homes(desc)
         (mux['boot'] / 'config.yaml').write_text(json.dumps(invalid), encoding='utf-8')
-        result = rescan(root)
+        parked = rescan(root, ['boot', 'invalid-hot'])
         desc = control(root, 'identify')
         # An explicit control-socket rescan retries parked profiles by design, so the still-invalid
         # 'invalid-hot' is re-parked alongside 'boot' (never served in between).
-        assert sorted(result['parked']) == ['boot', 'invalid-hot'], (result, tail(mux))
+        assert parked == ['boot', 'invalid-hot'], (parked, tail(mux))
         assert added.resolve() not in served_homes(desc), desc
         assert mux['boot'].resolve() not in served_homes(desc), desc
         assert 'boot' in desc.get('parked_profiles', {}), desc
