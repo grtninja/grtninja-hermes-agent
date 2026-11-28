@@ -43,6 +43,7 @@ from typing import Callable
 import pytest
 
 from tests.fakes.fake_llm_provider import MODEL_ID, OFFER_VERSION
+from tests.fixtures.child_env import hermes_child_env
 
 
 def require_tmux() -> None:
@@ -172,7 +173,7 @@ class ClassicHome:
     def env(self) -> dict[str, str]:
         """Allowlisted child env: no inherited HERMES_*, provider keys, display or TMUX variables."""
         keep = ("PATH", "LANG", "USER", "LOGNAME", "SHELL", "TMPDIR")
-        env = {k: os.environ[k] for k in keep if k in os.environ}
+        env = hermes_child_env(keep)
         env.update({
             "LC_ALL": "C.UTF-8", "LANG": "C.UTF-8", "TERM": "xterm-256color", "TZ": "UTC",
             "HOME": str(self.home), "HERMES_HOME": str(self.hermes_home), "PYTHONPATH": str(REPO_ROOT),

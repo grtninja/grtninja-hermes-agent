@@ -7,6 +7,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from tests.fakes.fake_llm_provider import FakeLLMServer, Text, ToolCall, write_hermes_home
+from tests.fixtures.child_env import hermes_child_env
 
 _PLUGIN = '''
 import dataclasses, json, os
@@ -61,9 +62,7 @@ def test_tool_hook_in_a_ticked_job_sees_its_execution_and_none_outside(tmp_path)
             "next_run_at": (now() - timedelta(minutes=1)).isoformat(),
             "enabled": True, "state": "scheduled", "deliver": "local",
             "repeat": {"times": None, "completed": 0}}]}))
-        env = {k: v for k, v in os.environ.items()
-               if not k.startswith(("HERMES_", "_HERMES_"))
-               and not k.endswith(("_API_KEY", "_TOKEN"))}
+        env = hermes_child_env(lambda k: not k.startswith(("HERMES_", "_HERMES_")) and not k.endswith(("_API_KEY", "_TOKEN")))
         env.update(HERMES_HOME=str(home), PYTHONPATH=str(Path(__file__).resolve().parents[2]))
         result = subprocess.run([sys.executable, "-c", _TICK], env=env, stdin=subprocess.DEVNULL,
                                 capture_output=True, text=True, timeout=180, check=False)

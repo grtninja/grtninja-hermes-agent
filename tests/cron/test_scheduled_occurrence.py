@@ -7,6 +7,7 @@ import sys
 
 import pytest
 from datetime import UTC
+from tests.fixtures.child_env import hermes_child_env
 
 
 _FIRE = """
@@ -43,9 +44,7 @@ else:
 
 
 def _fire(home, mode):
-    env = {k: v for k, v in os.environ.items()
-           if not k.startswith(('HERMES_', '_HERMES_'))
-           and not k.endswith(('_API_KEY', '_TOKEN'))}
+    env = hermes_child_env(lambda k: not k.startswith(('HERMES_', '_HERMES_')) and not k.endswith(('_API_KEY', '_TOKEN')))
     env['HERMES_HOME'] = str(home)
     env['PYTHONPATH'] = str(Path(__file__).resolve().parents[2])
     result = subprocess.run([sys.executable, '-c', _FIRE, mode], env=env,

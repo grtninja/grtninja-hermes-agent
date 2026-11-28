@@ -7,12 +7,13 @@ import sys
 from pathlib import Path
 
 import pytest
+from tests.fixtures.child_env import hermes_child_env
 
 REPO = Path(__file__).resolve().parents[2]
 
 
 def _run(args: list[str], hermes_home: Path, **extra_env: str) -> subprocess.CompletedProcess:
-    env = {k: v for k, v in os.environ.items() if not k.startswith(("HERMES_", "TERMUX_"))}
+    env = hermes_child_env(lambda k: not k.startswith(("HERMES_", "TERMUX_")))
     env.update({"HERMES_HOME": str(hermes_home), "PYTHONPATH": str(REPO), **extra_env})
     return subprocess.run(
         [sys.executable, *args], cwd=REPO, env=env, capture_output=True, text=True, timeout=120, check=False)

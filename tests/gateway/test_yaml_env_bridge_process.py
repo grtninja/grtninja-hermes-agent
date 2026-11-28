@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from gateway.platforms._shared import bridged_env_digest
+from tests.fixtures.child_env import hermes_child_env
 
 
 _BOOT = """
@@ -79,8 +80,7 @@ def test_fresh_process_refreshes_only_bridge_owned_values(tmp_path, source):
     home.mkdir()
     config = home / "config.yaml"
     config.write_text("telegram:\n  reactions: false\n", encoding="utf-8")
-    env = {key: value for key, value in os.environ.items()
-           if not key.startswith(("HERMES_", "TELEGRAM_", "DISCORD_"))}
+    env = hermes_child_env(lambda key: not key.startswith(("HERMES_", "TELEGRAM_", "DISCORD_")))
     env.update({key: str(home) for key in ("HERMES_HOME", "HOME", "USERPROFILE", "TMP", "TEMP", "TMPDIR")})
     first = _boot(home, env)
     assert first["value"] == "false"
@@ -105,8 +105,7 @@ def test_fresh_process_retracts_inherited_value_when_yaml_key_is_removed(tmp_pat
     home.mkdir()
     config = home / "config.yaml"
     config.write_text("telegram:\n  reactions: false\n", encoding="utf-8")
-    env = {key: value for key, value in os.environ.items()
-           if not key.startswith(("HERMES_", "TELEGRAM_", "DISCORD_"))}
+    env = hermes_child_env(lambda key: not key.startswith(("HERMES_", "TELEGRAM_", "DISCORD_")))
     env.update({key: str(home) for key in ("HERMES_HOME", "HOME", "USERPROFILE", "TMP", "TEMP", "TMPDIR")})
     first = _boot(home, env)
     assert first["value"] == "false"
@@ -127,8 +126,7 @@ def test_real_child_env_builder_preserves_refresh_retraction_and_operator_preced
     home = tmp_path / "profile"
     home.mkdir()
     (home / "config.yaml").write_text("telegram:\n  reactions: false\n", encoding="utf-8")
-    env = {key: value for key, value in os.environ.items()
-           if not key.startswith(("HERMES_", "TELEGRAM_", "DISCORD_"))}
+    env = hermes_child_env(lambda key: not key.startswith(("HERMES_", "TELEGRAM_", "DISCORD_")))
     env.update({key: str(home) for key in ("HERMES_HOME", "HOME", "USERPROFILE", "TMP", "TEMP", "TMPDIR")})
 
     observed = _boot(home, env, replacement=replacement, source=source)

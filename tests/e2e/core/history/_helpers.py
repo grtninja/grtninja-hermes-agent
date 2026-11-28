@@ -25,6 +25,7 @@ import threading
 import time
 from pathlib import Path
 from typing import Any, Iterable
+from tests.fixtures.child_env import hermes_child_env
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 
@@ -319,7 +320,7 @@ def assert_usage_matches(hermes_home: Path, sids: list[str], records: list[dict[
 
 
 def child_env(home: Path, hermes_home: Path, workdir: Path) -> dict[str, str]:
-    env = {k: os.environ[k] for k in _ENV_ALLOW if k in os.environ}
+    env = hermes_child_env(_ENV_ALLOW)
     env.update(
         HOME=str(home), HERMES_HOME=str(hermes_home), PWD=str(workdir),
         HERMES_TEST_ISOLATION=str(hermes_home),

@@ -27,6 +27,7 @@ import pytest
 
 from tests.e2e.core.cli_tmux._classic import require_tmux
 from tests.fakes.fake_llm_provider import FakeLLMServer, Text, write_hermes_home
+from tests.fixtures.child_env import hermes_child_env
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 WORDS = {1: 60, 2: 260, 3: 130}
@@ -98,7 +99,7 @@ def test_resizes_keep_each_transcript_line_once_in_tmux_scrollback(tmp_path: Pat
 
     with llm:
         write_hermes_home(home / ".hermes", llm.base_url)
-        env = {k: v for k, v in os.environ.items() if not k.startswith(("HERMES_", "TMUX"))}
+        env = hermes_child_env(lambda k: not k.startswith(("HERMES_", "TMUX")))
         env.update(HOME=str(home), HERMES_HOME=str(home / ".hermes"), PYTHONPATH=str(REPO_ROOT),
                    TERM="xterm-256color", HERMES_STATE_DB_GUARD_BYPASS="1", PYTHONFAULTHANDLER="1")
         argv = [sys.executable, "-m", "hermes_cli.main", "chat", "--cli", "--yolo"]

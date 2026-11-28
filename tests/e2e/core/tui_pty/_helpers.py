@@ -39,6 +39,7 @@ from tests.e2e.core._pending_fixes import known_failure
 from tests.e2e.core.terminal._pty import cmdline, poll, session_members
 from tests.e2e.core.terminal._vt import Screen
 from tests.fakes.fake_llm_provider import write_hermes_home
+from tests.fixtures.child_env import hermes_child_env
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 TITLE = "Scripted session title"
@@ -246,8 +247,7 @@ class TmuxTui:
             # window-size manual must be set after the session exists (tmux 3.3 dies on it here).
             "set -g history-limit 100000\nset -g status off\nset -g remain-on-exit on\n"
             "set -g default-terminal tmux-256color\nset -g escape-time 10\n", encoding="utf-8")
-        env = {k: v for k, v in os.environ.items()
-               if not k.startswith(("HERMES_", "TMUX", "OPENAI_", "OPENROUTER_", "ANTHROPIC_"))}
+        env = hermes_child_env(lambda k: not k.startswith(("HERMES_", "TMUX", "OPENAI_", "OPENROUTER_", "ANTHROPIC_")))
         env.update(HOME=str(self.home), HERMES_HOME=str(self.hermes_home), PYTHONPATH=str(REPO_ROOT),
                    TMPDIR=str(root / "tmp"), LANG="C.UTF-8", LC_ALL="C.UTF-8", PYTHONUNBUFFERED="1",
                    HERMES_STATE_DB_GUARD_BYPASS="1", HERMES_TUI_INLINE="1" if inline else "0",

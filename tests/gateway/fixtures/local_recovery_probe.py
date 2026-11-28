@@ -15,6 +15,7 @@ import time
 from websockets.asyncio.client import connect
 from tests.gateway.test_normal_runtime_boot import control
 from tests.waiting import async_wait_until
+from tests.fixtures.child_env import hermes_child_env
 
 
 class Model(BaseHTTPRequestHandler):
@@ -52,7 +53,7 @@ CHILD_ENV_KEYS = ('PATH', 'LANG', 'TZ', 'SYSTEMROOT', 'SYSTEMDRIVE', 'WINDIR', '
 
 
 def child_env():
-    return {k: os.environ[k] for k in CHILD_ENV_KEYS if k in os.environ}
+    return hermes_child_env(CHILD_ENV_KEYS)
 
 
 async def rpc(ws, method, **params):

@@ -21,6 +21,7 @@ import time
 from pathlib import Path
 
 import pytest
+from tests.fixtures.child_env import hermes_child_env
 
 pytestmark = [pytest.mark.platforms("windows"), pytest.mark.spawns_gateway_lookalike]
 
@@ -54,8 +55,7 @@ def _native_extension() -> Path:
 
 
 def _child_env(home: Path) -> dict:
-    env = {k: v for k, v in os.environ.items()
-           if not k.startswith(("HERMES_", "PYTEST_")) and not k.endswith(("_API_KEY", "_TOKEN"))}
+    env = hermes_child_env(lambda k: not k.startswith(("HERMES_", "PYTEST_")) and not k.endswith(("_API_KEY", "_TOKEN")))
     env.update(HOME=str(home.parent), USERPROFILE=str(home.parent), HERMES_HOME=str(home),
                HERMES_GATEWAY_LOCK_DIR=str(home.parent / "locks"), PYTHONPATH=str(PROJECT_ROOT),
                PYTHONUTF8="1", NO_COLOR="1", HERMES_ACCEPT_HOOKS="1")

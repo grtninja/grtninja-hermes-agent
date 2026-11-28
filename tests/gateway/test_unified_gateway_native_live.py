@@ -28,6 +28,7 @@ from urllib.parse import urlsplit
 
 import pytest
 from websockets.asyncio.client import connect
+from tests.fixtures.child_env import hermes_child_env
 
 ROOT = Path(__file__).resolve().parents[2]
 # Windows children need the system environment (Winsock, temp, PATHEXT) that the
@@ -285,7 +286,7 @@ def harness(tmp_path, peer):
         "        record('worker_error', reason=obj.get('reason'), traceback=traceback.format_exc())\n"
         "    return _dumps(obj, *a, **kw)\n"
         "_json.dumps = _dumps_witness\n", encoding='utf-8')
-    env = {k: os.environ[k] for k in _CHILD_ENV_KEYS if k in os.environ}
+    env = hermes_child_env(_CHILD_ENV_KEYS)
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONUNBUFFERED='1',
                PYTHONPATH=os.pathsep.join([str(site), str(ROOT)]),
                OPENAI_API_KEY='loopback-only', OPENAI_BASE_URL=url)
