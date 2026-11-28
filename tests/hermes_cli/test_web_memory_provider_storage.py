@@ -5,6 +5,7 @@ core coerces values, keeps secrets write-only, and never opens the file itself."
 import json
 
 import pytest
+from tests.fixtures.child_env import hermes_child_env
 
 _INIT = """
 import json
@@ -322,7 +323,7 @@ def test_the_enable_command_run_from_another_shell_enables_only_the_inspected_ho
 
     # A shell somewhere else follows the notice: its own HERMES_HOME (or none), with HERMES_HOME set when told to.
     repo = Path(__file__).resolve().parents[2]
-    env = {k: v for k, v in os.environ.items() if not k.startswith("HERMES_")}
+    env = hermes_child_env(lambda k: not k.startswith("HERMES_"))
     env.update(HOME=str(tmp_path), PYTHONPATH=str(repo), **({"HERMES_HOME": str(tmp_path / shell)} if shell else {}))
     told = re.search(r"with HERMES_HOME set to (.+)\.$", notice)
     if told:

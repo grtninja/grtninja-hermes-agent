@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from tests.fixtures.child_env import hermes_child_env
 
 
 def _probe(tmp_path, *, advanced=False, runs=False):
@@ -11,7 +12,7 @@ def _probe(tmp_path, *, advanced=False, runs=False):
     home, state = tmp_path / 'home', tmp_path / 'state'
     home.mkdir()
     state.mkdir()
-    env = {key: os.environ[key] for key in ('PATH', 'LANG', 'TZ', 'SYSTEMROOT') if key in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'SYSTEMROOT'))
     env.update(HOME=str(home), USERPROFILE=str(home), HERMES_HOME=str(state), PYTHONPATH=str(repo))
     if advanced:
         env['API_ADVANCED'] = '1'

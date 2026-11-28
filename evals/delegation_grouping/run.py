@@ -19,6 +19,8 @@ import tempfile
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[2]))  # this checkout's tests.fixtures
+from tests.fixtures.child_env import hermes_child_env
 
 HERE = Path(__file__).resolve().parent
 RESULTS = Path(os.environ.get("DG_RESULTS") or HERE / "results")
@@ -130,7 +132,7 @@ def schema(tree, mode):
     with tempfile.TemporaryDirectory(prefix="dg-schema-") as home:
         Path(home, "config.yaml").write_text(
             "delegation:\n  independent_completions: %s\n" % ("true" if mode == "on" else "false"), encoding="utf-8")
-        env = {"HOME": home, "HERMES_HOME": home, "PATH": os.environ.get("PATH", ""), "HERMES_PLATFORM": "cli"}
+        env = hermes_child_env(("PATH",), HOME=home, HERMES_HOME=home, HERMES_PLATFORM="cli")
         out = subprocess.run([os.environ.get("DG_PYTHON") or sys.executable, "-c", code, tree], capture_output=True,
                              text=True, env=env, cwd=home, check=True, timeout=120).stdout
     print(out.strip().splitlines()[-1])

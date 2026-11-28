@@ -7,6 +7,9 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[2]))  # this checkout's tests.fixtures
+from tests.fixtures.child_env import hermes_child_env
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--baseline', type=Path, required=True)
@@ -36,7 +39,7 @@ for (label, tree), (name, command), populated in itertools.product(TREES.items()
     with tempfile.TemporaryDirectory(prefix='hermes-readers-cli-ab-') as tmp:
         home = Path(tmp) / 'profile'
         home.mkdir()
-        env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ') if k in os.environ}
+        env = hermes_child_env(('PATH', 'LANG', 'TZ'))
         env.update(HOME=tmp, USERPROFILE=tmp, HERMES_HOME=str(home), PYTHONPATH=str(tree))
         def run(args):
             return subprocess.run([PYTHON, *args], cwd=tree, env=env, stdin=subprocess.DEVNULL,

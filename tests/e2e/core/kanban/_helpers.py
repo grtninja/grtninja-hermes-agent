@@ -17,6 +17,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Optional
+from tests.fixtures.child_env import hermes_child_env
 
 REPO = Path(__file__).resolve().parents[4]
 PY = sys.executable
@@ -93,8 +94,7 @@ class Board:
 
     # env / processes -------------------------------------------------------
     def env(self) -> dict[str, str]:
-        env = {k: v for k, v in os.environ.items()
-               if not k.startswith("HERMES_") and not k.endswith(("_API_KEY", "_TOKEN"))}
+        env = hermes_child_env(lambda k: not k.startswith("HERMES_") and not k.endswith(("_API_KEY", "_TOKEN")))
         env.pop("PYTEST_CURRENT_TEST", None)
         env.update({
             "HOME": str(self.home), "HERMES_HOME": str(self.hermes_home),

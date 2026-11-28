@@ -20,6 +20,7 @@ import os
 import textwrap
 
 import pytest
+from tests.fixtures.child_env import hermes_child_env
 
 
 def _default(*keys: str):
@@ -156,8 +157,8 @@ class TestIgnoreUserConfigDelegationDefault:
             "delegate_tool_config._load_config()['max_iterations']]))"
         )
         for ignored in (False, True):
-            env = {"HOME": str(tmp_path), "USERPROFILE": str(tmp_path), "HERMES_HOME": str(tmp_path),
-                   "PATH": os.environ["PATH"], "PYTHONPATH": str(root), "PYTHONDONTWRITEBYTECODE": "1"}
+            env = hermes_child_env(("PATH",), HOME=str(tmp_path), USERPROFILE=str(tmp_path), HERMES_HOME=str(tmp_path),
+                                   PYTHONPATH=str(root), PYTHONDONTWRITEBYTECODE="1")
             for name in ("SYSTEMROOT", "WINDIR", "COMSPEC"):
                 if name in os.environ:
                     env[name] = os.environ[name]

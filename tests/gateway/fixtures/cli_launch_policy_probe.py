@@ -12,6 +12,7 @@ import threading
 import time
 
 from tests.gateway.fixtures.local_recovery_probe import daemon, websocket, rpc
+from tests.fixtures.child_env import hermes_child_env
 
 
 class Model(BaseHTTPRequestHandler):
@@ -90,9 +91,8 @@ def probe(tmp_path):
     config.write_text(json.dumps(cfg))
     before = config.read_bytes()
     (home / 'SOUL.md').write_text('SOUL_LAUNCH_MARKER')
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'SYSTEMROOT') if k in os.environ}
-    env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(root),
-               HERMES_DISABLE_LAZY_INSTALLS='1')
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'SYSTEMROOT'))
+    env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(root))
     sessions, pids = {}, []
     keys = {'left': 'private-left-launch-token', 'right': 'private-right-launch-token'}
 

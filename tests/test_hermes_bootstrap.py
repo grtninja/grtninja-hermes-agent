@@ -31,6 +31,7 @@ from pathlib import Path
 import pytest
 
 from hermes_agent.compat.paths import current_path
+from tests.fixtures.child_env import hermes_child_env
 
 
 # Import the module under test via an import-time side-effect check path.
@@ -247,7 +248,7 @@ def test_library_imports_of_dual_use_entry_modules_stay_side_effect_free(tmp_pat
         print(json.dumps({"bootstrapped": "hermes_bootstrap" in sys.modules, "changed": changed}))
     """)
     repo = Path(__file__).resolve().parents[1]
-    env = {k: os.environ[k] for k in ("PATH", "SYSTEMROOT", "WINDIR") if k in os.environ}
+    env = hermes_child_env(("PATH", "SYSTEMROOT", "WINDIR"))
     env.update({"HOME": str(tmp_path), "USERPROFILE": str(tmp_path), "PYTHONPATH": str(repo),
                 "HERMES_HOME": str(tmp_path / "home"), "PYTHONDONTWRITEBYTECODE": "1"})
     child = subprocess.run([sys.executable, "-c", code], cwd=str(tmp_path), env=env,

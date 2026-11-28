@@ -17,6 +17,7 @@ import pytest
 
 from gateway.config import Platform
 from tests.gateway.test_surface_admission import _authority
+from tests.fixtures.child_env import hermes_child_env
 
 QUESTIONS = [{'qid': 'q0', 'question': 'colour?', 'choices': ['red', 'blue'], 'multi_select': False},
              {'qid': 'q1', 'question': 'size?', 'choices': None, 'multi_select': False}]
@@ -155,7 +156,7 @@ def test_cli_turn_batch_answered_by_clarify_lock_from_a_second_viewer_end_to_end
     home.mkdir()
     state.mkdir()
     repo = Path(__file__).resolve().parents[2]
-    env = {key: os.environ[key] for key in ('PATH', 'LANG', 'TZ') if key in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ'))
     env.update(HOME=str(home), USERPROFILE=str(home), HERMES_HOME=str(state), PYTHONPATH=str(repo))
     result = subprocess.run(
         [sys.executable, str(Path(__file__).parent / 'fixtures' / 'authority_clarify_lock_peer.py')],

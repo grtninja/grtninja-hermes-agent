@@ -28,6 +28,7 @@ from typing import Callable
 
 from tests.e2e.core.terminal._vt import Screen
 from tests.fakes.fake_llm_provider import FakeLLMServer, write_hermes_home
+from tests.fixtures.child_env import hermes_child_env
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 
@@ -138,7 +139,7 @@ class PtyHermes:
         self._lock = threading.Lock()
         (root / "tmp").mkdir(parents=True, exist_ok=True)
         (root / "work").mkdir(parents=True, exist_ok=True)
-        env = {k: os.environ[k] for k in ("PATH", "LANG", "LC_ALL") if k in os.environ}
+        env = hermes_child_env(("PATH", "LANG", "LC_ALL"))
         env.update(
             HOME=str(self.home), HERMES_HOME=str(self.hermes_home), PYTHONPATH=str(REPO_ROOT),
             TMPDIR=str(root / "tmp"), TERM="xterm-256color", COLORTERM="truecolor",

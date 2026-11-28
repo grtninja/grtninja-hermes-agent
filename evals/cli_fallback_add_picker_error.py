@@ -24,6 +24,8 @@ import tempfile
 import termios
 import time
 import fcntl
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # this checkout's tests.fixtures
+from tests.fixtures.child_env import hermes_child_env
 
 PRIMARY = {"provider": "openrouter", "default": "primary/model-a",
            "base_url": "https://openrouter.ai/api/v1", "api_mode": "chat_completions"}
@@ -57,9 +59,9 @@ def run(root: Path, output: Path) -> dict:
         shim = Path(home) / "shim" / "curses"
         shim.mkdir(parents=True)
         (shim / "__init__.py").write_text("raise ImportError('curses disabled for PTY harness')\n")
-        env = {"PATH": os.environ["PATH"], "HOME": home, "HERMES_HOME": str(hh),
-               "PYTHONPATH": f"{shim.parent}{os.pathsep}{root}", "PYTHONUNBUFFERED": "1",
-               "TERM": "dumb", "LANG": "C.UTF-8"}
+        env = hermes_child_env(("PATH",), HOME=home, HERMES_HOME=str(hh),
+                               PYTHONPATH=f"{shim.parent}{os.pathsep}{root}", PYTHONUNBUFFERED="1",
+                               TERM="dumb", LANG="C.UTF-8")
         master, slave = pty.openpty()
         fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", 50, 120, 0, 0))
         proc = subprocess.Popen([sys.executable, "-m", "hermes_cli.main", "fallback", "add"],

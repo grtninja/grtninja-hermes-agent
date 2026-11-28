@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from tests.fixtures.child_env import hermes_child_env
 
 
 def test_real_shared_clarify_survives_detach(tmp_path):
@@ -10,7 +11,7 @@ def test_real_shared_clarify_survives_detach(tmp_path):
     home.mkdir()
     state.mkdir()
     repo = Path(__file__).resolve().parents[2]
-    env = {key: os.environ[key] for key in ('PATH', 'LANG', 'TZ') if key in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ'))
     env.update(HOME=str(home), USERPROFILE=str(home), HERMES_HOME=str(state), PYTHONPATH=str(repo))
     result = subprocess.run(
         [sys.executable, str(Path(__file__).parent / 'fixtures' / 'authority_clarify_peer.py')],

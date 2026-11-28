@@ -18,6 +18,8 @@ import tempfile
 import termios
 import time
 import fcntl
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # this checkout's tests.fixtures
+from tests.fixtures.child_env import hermes_child_env
 
 
 def run_case(root, output, name, behind, early=False, cancel=False):
@@ -36,10 +38,10 @@ def run_case(root, output, name, behind, early=False, cancel=False):
             cache.write_bytes(payload)
         else:
             os.mkfifo(cache)
-        env = {"PATH": os.environ["PATH"], "HOME": home, "HERMES_HOME": str(hh),
-               "PYTHONPATH": str(root), "PYTHONUNBUFFERED": "1",
-               "TERM": "xterm-256color", "LANG": "C.UTF-8",
-               "OPENAI_API_KEY": "local-not-used", "PROMPT_TOOLKIT_NO_CPR": "1"}
+        env = hermes_child_env(("PATH",), HOME=home, HERMES_HOME=str(hh),
+                               PYTHONPATH=str(root), PYTHONUNBUFFERED="1",
+                               TERM="xterm-256color", LANG="C.UTF-8",
+                               OPENAI_API_KEY="local-not-used", PROMPT_TOOLKIT_NO_CPR="1")
         master, slave = pty.openpty()
         fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", 40, 120, 0, 0))
         bootstrap = ("import json; from pathlib import Path; import hermes_cli.main as m; "

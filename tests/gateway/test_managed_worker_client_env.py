@@ -13,6 +13,7 @@ import threading
 import pytest
 
 from tests.waiting import async_wait_until
+from tests.fixtures.child_env import hermes_child_env
 
 ROOT = Path(__file__).resolve().parents[2]
 PROBE = 'printf "%s|%s" "$NVM_DIR" "$(whichclient)"'
@@ -71,7 +72,7 @@ def test_managed_workers_run_each_sessions_tools_under_its_client_toolchain(tmp_
         'platform_toolsets': {'cli': ['terminal']}}))
     system_path = os.environ['PATH']
     bins = {name: _bin(tmp_path, name) for name in ('daemon', 'alpha', 'beta')}
-    env = {k: os.environ[k] for k in ('LANG', 'TZ') if k in os.environ}
+    env = hermes_child_env(('LANG', 'TZ'))
     env.update(PATH=f'{bins["daemon"]}{os.pathsep}{system_path}', HOME=str(user), USERPROFILE=str(user),
                HERMES_HOME=str(home), PYTHONPATH=str(ROOT), OPENAI_API_KEY='loopback-only', OPENAI_BASE_URL=url)
     # Never printed by the probe: if it shows anywhere public, the private client map leaked.

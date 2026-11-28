@@ -11,6 +11,7 @@ import threading
 from automation_peer import Model
 from local_recovery_probe import daemon, websocket, rpc
 from tests.waiting import async_wait_until
+from tests.fixtures.child_env import hermes_child_env
 
 
 def probe(base, source):
@@ -32,7 +33,7 @@ def probe(base, source):
         'terminal': {'cwd': str(home)}, 'approvals': {'mode': 'off'},
         'auxiliary': {'title_generation': {'enabled': False}}}
     (home / 'config.yaml').write_text(json.dumps(cfg))
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED'))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(root),
         OPENAI_API_KEY='loopback-only', OPENAI_BASE_URL=url, PYTHONUNBUFFERED='1')
 

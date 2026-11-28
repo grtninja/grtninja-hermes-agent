@@ -6,6 +6,7 @@ import sys
 
 import pytest
 from tests.fixtures.storage_seed import seed_session
+from tests.fixtures.child_env import hermes_child_env
 
 
 @pytest.mark.platforms("linux")
@@ -14,7 +15,7 @@ def test_full_observer_cannot_block_real_authority_execution(tmp_path):
     home, state = tmp_path / 'home', tmp_path / 'state'
     home.mkdir()
     state.mkdir()
-    env = {key: os.environ[key] for key in ('PATH', 'LANG', 'TZ') if key in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ'))
     env.update(HOME=str(home), USERPROFILE=str(home), HERMES_HOME=str(state),
                PYTHONPATH=str(repo), PYTHONUNBUFFERED='1')
     result = subprocess.run(

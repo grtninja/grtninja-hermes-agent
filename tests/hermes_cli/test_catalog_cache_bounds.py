@@ -14,6 +14,7 @@ import pytest
 from agent import models_dev
 import hermes_cli.models_catalog_static as static
 import hermes_cli.models_pricing as pricing
+from tests.fixtures.child_env import hermes_child_env
 
 
 def test_xai_floor_reuses_the_process_models_dev_copy_without_network(monkeypatch):
@@ -58,7 +59,7 @@ def test_models_dev_is_parsed_on_first_xai_read_not_at_import(tmp_path):
     (home / "models_dev_cache.json").write_text(json.dumps(
         {"xai": {"id": "xai", "models": {"grok-disk-only": {}}}, "openai": {"id": "openai", "models": {"gpt-x": {}}}}))
     repo = Path(__file__).resolve().parents[2]
-    env = {k: v for k, v in os.environ.items() if not k.startswith("HERMES_")}
+    env = hermes_child_env(lambda k: not k.startswith("HERMES_"))
     env.update(HERMES_HOME=str(home), HOME=str(tmp_path), PYTHONPATH=str(repo))
     out = subprocess.run([sys.executable, "-c", _LAZY_PROBE], check=False, cwd=repo, env=env, capture_output=True, text=True, timeout=120)
     assert out.returncode == 0, out.stderr[-2000:]

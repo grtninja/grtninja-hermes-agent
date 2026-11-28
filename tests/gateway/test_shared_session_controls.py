@@ -6,6 +6,7 @@ import subprocess
 import sys
 
 from tests.gateway.fixtures.storage_handles import close_storage_handles
+from tests.fixtures.child_env import hermes_child_env
 
 
 def test_shared_approval_outlives_viewer_and_bypasses_fifo(tmp_path):
@@ -13,7 +14,7 @@ def test_shared_approval_outlives_viewer_and_bypasses_fifo(tmp_path):
     home, state = tmp_path / 'home', tmp_path / 'state'
     home.mkdir()
     state.mkdir()
-    env = {k: os.environ[k] for k in ('PATH', 'SYSTEMROOT', 'LANG', 'TZ', 'TIRITH_ENABLED') if k in os.environ}
+    env = hermes_child_env(('PATH', 'SYSTEMROOT', 'LANG', 'TZ', 'TIRITH_ENABLED'))
     env.update(HOME=str(home), USERPROFILE=str(home), HERMES_HOME=str(state), PYTHONPATH=str(repo))
     result = subprocess.run([sys.executable, str(Path(__file__).parent / 'fixtures' / 'authority_controls_peer.py')],
                             cwd=tmp_path, env=env, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=100, check=False)

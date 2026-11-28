@@ -8,6 +8,9 @@ import socket
 import subprocess
 import tempfile
 import time
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[2]))  # this checkout's tests.fixtures
+from tests.fixtures.child_env import hermes_child_env
 
 
 def identify(state):
@@ -58,7 +61,7 @@ def main():
         (state / 'config.yaml').write_text(
             'gateway:\n  multiplex_profiles: false\nauxiliary:\n  title_generation:\n    enabled: false\n',
             encoding='utf-8')
-        env = {key: os.environ[key] for key in ('PATH', 'LANG', 'TZ') if key in os.environ}
+        env = hermes_child_env(('PATH', 'LANG', 'TZ'))
         env.update(HOME=str(home), USERPROFILE=str(home), HERMES_HOME=str(state),
                    PYTHONPATH=str(repo), PYTHONUNBUFFERED='1')
         with args.output.with_suffix('.log').open('w', encoding='utf-8') as log:

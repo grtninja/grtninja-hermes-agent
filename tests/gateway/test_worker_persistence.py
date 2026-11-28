@@ -10,6 +10,7 @@ import sys
 import pytest
 
 from tests.gateway.fixtures.local_recovery_probe import daemon, rpc, websocket
+from tests.fixtures.child_env import hermes_child_env
 
 
 @pytest.mark.platforms("linux")
@@ -21,7 +22,7 @@ def test_worker_survives_owner_restart_without_repeating_tool(tmp_path):
     (home / 'config.yaml').write_text(json.dumps({'gateway': {'multiplex_profiles': False},
         'model': {'provider': 'custom', 'default': 'inert', 'base_url': 'http://127.0.0.1:9/v1'},
         'auxiliary': {'title_generation': {'enabled': False}}}))
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED'))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(root), OPENAI_API_KEY='loopback-only', OPENAI_BASE_URL='http://127.0.0.1:9/v1')
     async def create(desc):
         async with websocket(home, desc) as ws:

@@ -12,6 +12,7 @@ import time
 import pytest
 from websockets.asyncio.client import connect
 from websockets.exceptions import InvalidStatus
+from tests.fixtures.child_env import hermes_child_env
 
 
 def control(home, verb, params=None):
@@ -138,7 +139,7 @@ def test_normal_entrypoint_earns_authenticated_authority_readiness(tmp_path, mod
         'auxiliary': {'title_generation': {'enabled': False}},
     }))
     root = Path(__file__).resolve().parents[2]
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED'))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home),
                PYTHONPATH=str(root), PYTHONUNBUFFERED='1',
                OPENAI_API_KEY='loopback-only', OPENAI_BASE_URL=model_url)

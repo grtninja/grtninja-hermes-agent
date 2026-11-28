@@ -27,6 +27,7 @@ from gateway.runtime_bootstrap import TicketStore
 from tests.gateway.test_native_http_auth import daemon, headers
 from tests.gateway.test_normal_runtime_boot import control
 from tests.hermes_cli.test_gateway_attach import REPO, _attach, _serve
+from tests.fixtures.child_env import hermes_child_env
 
 
 @pytest.fixture
@@ -430,9 +431,9 @@ def _multiplexing_daemon(tmp_path, names):
     for name in names:
         (home / "profiles" / name).mkdir(parents=True)
         (home / "profiles" / name / "config.yaml").write_text(json.dumps(model))
-    env = {k: os.environ[k] for k in ("PATH", "LANG", "TZ", "TIRITH_ENABLED") if k in os.environ}
+    env = hermes_child_env(("PATH", "LANG", "TZ", "TIRITH_ENABLED"))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(REPO),
-               PYTHONUNBUFFERED="1", HERMES_DISABLE_LAZY_INSTALLS="1")
+               PYTHONUNBUFFERED="1")
     with (tmp_path / "gateway.log").open("w+") as log:
         process = subprocess.Popen([sys.executable, "-m", "gateway.run"], cwd=REPO, env=env,
                                    stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT)

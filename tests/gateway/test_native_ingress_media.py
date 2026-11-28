@@ -7,6 +7,7 @@ import sys
 import time
 
 import pytest
+from tests.fixtures.child_env import hermes_child_env
 
 
 def _peer(tmp_path, mode):
@@ -14,7 +15,7 @@ def _peer(tmp_path, mode):
     home, state = tmp_path / 'home', tmp_path / 'state'
     home.mkdir(exist_ok=True)
     state.mkdir(exist_ok=True)
-    env = {key: os.environ[key] for key in ('PATH', 'SYSTEMROOT', 'LANG', 'TZ') if key in os.environ}
+    env = hermes_child_env(('PATH', 'SYSTEMROOT', 'LANG', 'TZ'))
     env.update(HOME=str(home), USERPROFILE=str(home), HERMES_HOME=str(state),
                PYTHONPATH=str(repo), PYTHONUNBUFFERED='1')
     return [sys.executable, str(Path(__file__).parent / 'fixtures' / 'native_ingress_media_peer.py'), mode], env, repo, state

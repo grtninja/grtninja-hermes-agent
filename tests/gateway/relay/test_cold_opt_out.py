@@ -8,6 +8,7 @@ import textwrap
 
 import pytest
 import hermes_yaml as yaml
+from tests.fixtures.child_env import hermes_child_env
 
 
 @pytest.mark.parametrize("case", ["native", "url-only", "disabled", "managed", "managed-only", "scoped"])
@@ -31,7 +32,7 @@ def test_cold_fronted_platforms_is_read_only(tmp_path, case):
         (root / ".env").write_text("GATEWAY_RELAY_SECRET=dotenv-only-test-secret\n")
     # Allowlist only: never inherit live credentials, profile selectors, or
     # pytest's imported modules. HOME and cwd are temporary as well as HERMES_HOME.
-    env = {k: os.environ[k] for k in ("PATH", "SYSTEMROOT", "WINDIR") if k in os.environ}
+    env = hermes_child_env(("PATH", "SYSTEMROOT", "WINDIR"))
     env.update({"HOME": str(tmp_path), "USERPROFILE": str(tmp_path),
                 "HERMES_HOME": str(home), "HERMES_MANAGED_DIR": str(managed),
                 "PYTHONPATH": str(Path(__file__).resolve().parents[3]),

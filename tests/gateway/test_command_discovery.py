@@ -16,6 +16,7 @@ from websockets.asyncio.client import connect
 from websockets.exceptions import InvalidStatus
 
 from tests.gateway.test_normal_runtime_boot import control
+from tests.fixtures.child_env import hermes_child_env
 
 
 async def _rpc_result(ws, rid):
@@ -95,7 +96,7 @@ def test_ordinary_daemon_discovery_matches_legacy_extensions(tmp_path):
     (plugin / 'plugin.yaml').write_text('name: probe_plugin\nversion: 0.1.0\ndescription: Discovery fixture\n')
     (plugin / '__init__.py').write_text(
         "def register(ctx):\n    ctx.register_command('probe-plugin', lambda args: args, description='Disposable plugin discovery')\n")
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED'))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home),
                PYTHONPATH=str(root), PYTHONUNBUFFERED='1')
     requests = [('commands.catalog', {}), *[('complete.slash', {'text': text})

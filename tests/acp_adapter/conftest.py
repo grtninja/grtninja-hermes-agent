@@ -25,6 +25,7 @@ import sys
 import time
 
 import pytest
+from tests.fixtures.child_env import hermes_child_env
 
 
 @pytest.fixture(autouse=True)
@@ -70,11 +71,11 @@ def daemon(tmp_path, model_peer, request):
     for key, value in (request.param.items() if isinstance(getattr(request, 'param', None), dict) else ()):
         config.setdefault(key, {}).update(value)
     (home / "config.yaml").write_text(json.dumps(config))
-    env = {k: os.environ[k] for k in ("PATH", "LANG", "TZ") if k in os.environ}
+    env = hermes_child_env(("PATH", "LANG", "TZ"))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home),
                PYTHONPATH=str(root), PYTHONUNBUFFERED="1",
                OPENAI_API_KEY="loopback-only", OPENAI_BASE_URL=model_url,
-               HERMES_ACP_SKIP_CONFIGURED_MCP="1", HERMES_DISABLE_LAZY_INSTALLS="1")
+               HERMES_ACP_SKIP_CONFIGURED_MCP="1")
     command = [sys.executable, "-m", "gateway.run"]
     if getattr(request, 'param', None) == 'proposed-acp-descriptor':
         # API-owner handoff only: execution/create/policy stay unmodified. This

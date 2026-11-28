@@ -5,11 +5,12 @@ import subprocess
 import sys
 
 import pytest
+from tests.fixtures.child_env import hermes_child_env
 
 
 def _probe(tmp_path, source):
     root = Path(__file__).resolve().parents[2]
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED'))
     env['PYTHONPATH'] = str(root)
     result = subprocess.run([sys.executable, str(root / 'tests/gateway/fixtures/local_automation_peer.py'),
         str(tmp_path), source], cwd=root, env=env, stdin=subprocess.DEVNULL,

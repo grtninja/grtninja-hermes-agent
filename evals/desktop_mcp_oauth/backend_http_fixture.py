@@ -27,6 +27,8 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlencode, urlsplit
+sys.path.append(str(Path(__file__).resolve().parents[2]))  # this checkout's tests.fixtures
+from tests.fixtures.child_env import hermes_child_env
 
 
 class Provider(ThreadingHTTPServer):
@@ -315,9 +317,8 @@ def main():
         with tempfile.TemporaryDirectory(prefix="hermes-oauth-http-") as temp:
             home = Path(temp)
             (home / ".hermes").mkdir()
-            env = {"PATH": os.environ.get("PATH", ""), "HOME": temp,
-                   "HERMES_HOME": str(home / ".hermes"), "LANG": "C.UTF-8", "TZ": "UTC",
-                   "PYTHONNOUSERSITE": "1"}
+            env = hermes_child_env(("PATH",), HOME=temp, HERMES_HOME=str(home / ".hermes"),
+                                   LANG="C.UTF-8", TZ="UTC", PYTHONNOUSERSITE="1")
             completed = subprocess.run([sys.executable, str(Path(__file__).resolve()),
                 "--repo", str(repo), "--output", str(output), "--isolated-worker"],
                 env=env, cwd=temp, stdin=subprocess.DEVNULL, timeout=180, check=False)

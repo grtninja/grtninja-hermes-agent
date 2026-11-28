@@ -3,13 +3,14 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from tests.fixtures.child_env import hermes_child_env
 
 
 def test_cli_readers_observe_committed_state_during_writer_transaction(tmp_path):
     repo = Path(__file__).resolve().parents[2]
     home = tmp_path / 'profile'
     home.mkdir()
-    env = {k: os.environ[k] for k in ('PATH', 'SYSTEMROOT', 'LANG', 'TZ') if k in os.environ}
+    env = hermes_child_env(('PATH', 'SYSTEMROOT', 'LANG', 'TZ'))
     env.update(HOME=str(tmp_path), USERPROFILE=str(tmp_path), HERMES_HOME=str(home), PYTHONPATH=str(repo))
     code = '''
 import os, subprocess, sys

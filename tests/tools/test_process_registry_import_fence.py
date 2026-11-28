@@ -14,6 +14,7 @@ import time
 
 import pytest
 from persistence_assembly import profile_scope
+from tests.fixtures.child_env import hermes_child_env
 
 _IMPORT_PROBE = r'''
 import json, os, sys
@@ -28,7 +29,7 @@ print(json.dumps(connects))
 def test_importing_process_registry_does_not_connect_to_state_db(tmp_path):
     home = tmp_path / "home"
     home.mkdir()
-    env = {k: v for k, v in os.environ.items() if not k.startswith("HERMES_")}
+    env = hermes_child_env(lambda k: not k.startswith("HERMES_"))
     env.update(HERMES_HOME=str(home), HOME=str(tmp_path), PYTHONPATH=os.getcwd())
     out = subprocess.run([sys.executable, "-c", _IMPORT_PROBE], env=env, capture_output=True, text=True,
                          timeout=120, stdin=subprocess.DEVNULL, check=False)

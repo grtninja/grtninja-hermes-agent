@@ -21,6 +21,7 @@ import pytest
 from websockets.asyncio.client import connect
 
 from tests.gateway.test_normal_runtime_boot import control
+from tests.fixtures.child_env import hermes_child_env
 
 
 def _seed(home, rows):
@@ -52,7 +53,7 @@ def test_per_profile_grants_edit_old_local_rows_of_their_own_profile(tmp_path):
     _seed(beta, [('old-desktop-beta', 'desktop', None), ('old-oneshot-beta', 'oneshot', None),
                  ('old-desktop-nous', 'desktop', 'nous:account'), ('old-desktop-foreign', 'desktop', 'telegram:42')])
     root = Path(__file__).resolve().parents[2]
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED'))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(root),
                PYTHONUNBUFFERED='1')
     with (tmp_path / 'gateway.log').open('w+') as log:

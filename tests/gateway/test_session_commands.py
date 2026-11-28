@@ -15,6 +15,7 @@ from websockets.exceptions import InvalidStatus
 
 from tests.gateway.fixtures.local_recovery_probe import Model, daemon, rpc, websocket
 from tests.waiting import async_wait_until
+from tests.fixtures.child_env import hermes_child_env
 
 
 @pytest.mark.platforms("linux")
@@ -40,7 +41,7 @@ def test_ordinary_daemon_slash_skill_uses_durable_fifo(tmp_path):
     (skill / 'SKILL.md').write_text(
         '---\nname: probe-skill\ndescription: Disposable slash fixture\n---\n'
         '# Probe\nSLASH_SKILL_BODY: follow this owned fixture instruction.\n')
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED'))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home),
                PYTHONPATH=str(root), PYTHONUNBUFFERED='1',
                OPENAI_API_KEY='loopback-only', OPENAI_BASE_URL=url,

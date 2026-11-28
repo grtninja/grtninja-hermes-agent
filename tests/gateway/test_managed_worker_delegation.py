@@ -15,6 +15,7 @@ import pytest
 
 from tests.gateway.fixtures.local_recovery_probe import daemon, rpc, websocket
 from tests.waiting import async_wait_until
+from tests.fixtures.child_env import hermes_child_env
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -74,7 +75,7 @@ def _setup(tmp_path):
         'model': {'provider': 'custom', 'default': 'm', 'base_url': url},
         'auxiliary': {'title_generation': {'enabled': False}},
         'platform_toolsets': {'cli': ['delegation', 'todo']}}))
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ'))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(ROOT),
                OPENAI_API_KEY='loopback-only', OPENAI_BASE_URL=url)
     return home, peer, url, env

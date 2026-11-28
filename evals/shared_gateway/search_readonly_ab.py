@@ -7,6 +7,8 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+sys.path.append(str(Path(__file__).resolve().parents[2]))  # this checkout's tests.fixtures
+from tests.fixtures.child_env import hermes_child_env
 
 
 def child(repo, case, account):
@@ -69,9 +71,8 @@ def main():
         source_hash = hashlib.sha256((repo / 'tools/session_search_tool.py').read_bytes()).hexdigest()
         for case in ['empty', 'foreign', 'existing']:
             with tempfile.TemporaryDirectory(prefix='hermes-reader-ab-') as tmp:
-                env = {'PATH': os.environ.get('PATH', ''), 'LANG': 'C.UTF-8', 'TZ': 'UTC',
-                       'HOME': tmp, 'HERMES_HOME': str(Path(tmp) / '.hermes'),
-                       'PYTHONDONTWRITEBYTECODE': '1'}
+                env = hermes_child_env(('PATH',), LANG='C.UTF-8', TZ='UTC', HOME=tmp,
+                                       HERMES_HOME=str(Path(tmp) / '.hermes'), PYTHONDONTWRITEBYTECODE='1')
                 proc = subprocess.run([sys.executable, str(Path(__file__).resolve()), '--child', str(repo),
                                        '--case', case, '--account', tmp], cwd=repo, env=env,
                                       stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=45, check=False)

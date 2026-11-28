@@ -6,6 +6,7 @@ import subprocess
 import sys
 
 import pytest
+from tests.fixtures.child_env import hermes_child_env
 
 
 @pytest.mark.parametrize("populated", [False, True])
@@ -13,7 +14,7 @@ def test_resume_and_exit_read_without_writing(tmp_path, populated):
     repo = Path(__file__).resolve().parents[2]
     home = tmp_path / "profile"
     home.mkdir()
-    env = {k: os.environ[k] for k in ("PATH", "SYSTEMROOT", "LANG", "TZ") if k in os.environ}
+    env = hermes_child_env(("PATH", "SYSTEMROOT", "LANG", "TZ"))
     env.update(HOME=str(tmp_path), USERPROFILE=str(tmp_path), HERMES_HOME=str(home), PYTHONPATH=str(repo))
     code = '''
 from pathlib import Path

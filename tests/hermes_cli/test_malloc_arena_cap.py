@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 from hermes_cli.resource_limits import glibc_malloc
+from tests.fixtures.child_env import hermes_child_env
 
 _REPO = Path(__file__).resolve().parents[2]
 
@@ -70,8 +71,7 @@ _HELPER_CHILD = _WORKERS + textwrap.dedent("""
 
 
 def _run(code: str, arg: str, home: Path, **env_overrides: str) -> dict:
-    env = {k: v for k, v in os.environ.items()
-           if k not in {"MALLOC_ARENA_MAX", "GLIBC_TUNABLES"} and not k.startswith("HERMES_")}
+    env = hermes_child_env(lambda k: k not in {"MALLOC_ARENA_MAX", "GLIBC_TUNABLES"} and not k.startswith("HERMES_"))
     env.update(HOME=str(home), HERMES_HOME=str(home / ".hermes"), PYTHONPATH=str(_REPO), **env_overrides)
     out = subprocess.run([sys.executable, "-c", code, arg], check=False, env=env, cwd=str(home),
                          capture_output=True, text=True, encoding="utf-8", timeout=120,

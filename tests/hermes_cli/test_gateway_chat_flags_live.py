@@ -14,6 +14,7 @@ import pytest
 
 from tests.gateway.fixtures.local_recovery_probe import Model
 from tests.gateway.test_normal_runtime_boot import control
+from tests.fixtures.child_env import hermes_child_env
 
 
 @pytest.mark.platforms("linux")
@@ -35,10 +36,9 @@ def test_continue_latest_footer_and_tool_listing(tmp_path):
         "gateway": {"multiplex_profiles": False},
         "model": {"provider": "custom", "default": "flags-model", "base_url": url},
         "auxiliary": {"title_generation": {"enabled": False}}}))
-    env = {k: os.environ[k] for k in ("PATH", "LANG", "TZ") if k in os.environ}
+    env = hermes_child_env(("PATH", "LANG", "TZ"))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(root),
-               PYTHONUNBUFFERED="1", OPENAI_API_KEY="loopback-only", OPENAI_BASE_URL=url,
-               HERMES_DISABLE_LAZY_INSTALLS="1")
+               PYTHONUNBUFFERED="1", OPENAI_API_KEY="loopback-only", OPENAI_BASE_URL=url)
 
     def hermes(*args, cwd, module="hermes_cli.main"):
         result = subprocess.run([sys.executable, "-m", module, *args], cwd=cwd, env=env,

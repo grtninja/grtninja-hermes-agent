@@ -21,6 +21,7 @@ import threading
 import pytest
 
 from tests.waiting import async_wait_until
+from tests.fixtures.child_env import hermes_child_env
 
 ROOT = Path(__file__).resolve().parents[2]
 COMMAND = 'sleep 2; echo FIRST_$((40+2)); sleep 1; echo SECOND_$((6*7)); (exit 7)'
@@ -108,7 +109,7 @@ def test_next_managed_turn_reads_the_previous_workers_background_output(tmp_path
         'model': {'provider': 'custom', 'default': 'm', 'base_url': url},
         'auxiliary': {'title_generation': {'enabled': False}}, 'approvals': {'mode': 'off'},
         'platform_toolsets': {'cli': ['terminal']}}))
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ'))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(ROOT),
                OPENAI_API_KEY='loopback-only', OPENAI_BASE_URL=url)
 

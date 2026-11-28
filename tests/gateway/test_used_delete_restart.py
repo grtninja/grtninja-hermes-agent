@@ -14,6 +14,7 @@ import pytest
 from tests.gateway.fixtures.local_recovery_probe import daemon, Model, websocket, rpc
 from tests.gateway.test_native_http_auth import ticket, headers as native_headers
 from tests.waiting import async_wait_until
+from tests.fixtures.child_env import hermes_child_env
 
 
 @pytest.mark.platforms("linux")
@@ -32,7 +33,7 @@ def test_used_api_and_native_delete_restart_exact_retry(tmp_path):
            'gateway': {'platforms': {'api_server': {'enabled': True, 'port': port, 'host': '127.0.0.1'}}, 'multiplex_profiles': False},
            'auxiliary': {'title_generation': {'enabled': False}}, 'terminal': {'cwd': str(home)}}
     (home / 'config.yaml').write_text(json.dumps(cfg), encoding='utf-8')
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED'))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(root),
                OPENAI_API_KEY='loopback-only', OPENAI_BASE_URL=base, API_SERVER_KEY='ordinary-daemon-owned-secret',
                API_SERVER_ENABLED='true', API_SERVER_PORT=str(port), PYTHONUNBUFFERED='1',

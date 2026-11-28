@@ -11,6 +11,7 @@ import subprocess
 import sys
 
 import pytest
+from tests.fixtures.child_env import hermes_child_env
 
 SHOWN = [['status.update', {'kind': 'warn', 'text': 'PROBE_WARNING_STATUS'}],
          ['status.update', {'kind': 'lifecycle', 'text': 'PROBE_LIFECYCLE_STATUS'}],
@@ -25,7 +26,7 @@ def test_local_viewer_receives_agent_status_and_notices(tmp_path, mode):
     home, state = tmp_path / 'home', tmp_path / 'state'
     home.mkdir()
     state.mkdir()
-    env = {k: os.environ[k] for k in ('PATH', 'SYSTEMROOT', 'LANG', 'TZ') if k in os.environ}
+    env = hermes_child_env(('PATH', 'SYSTEMROOT', 'LANG', 'TZ'))
     env.update(HOME=str(home), USERPROFILE=str(home), HERMES_HOME=str(state), PYTHONPATH=str(repo))
     result = subprocess.run(
         [sys.executable, str(Path(__file__).parent / 'fixtures' / 'local_status_notice_peer.py'), mode],

@@ -7,6 +7,7 @@ import subprocess
 import sys
 
 import pytest
+from tests.fixtures.child_env import hermes_child_env
 
 
 # The probe traces the transport client's opens with strace (Linux-only tool, Linux openat
@@ -16,7 +17,7 @@ import pytest
 @pytest.mark.parametrize('mode', ['custom', 'cross_profile', 'restart'])
 def test_owner_board_recovery(tmp_path, mode):
     repo = Path(__file__).resolve().parents[2]
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED'))
     env.update(HOME=str(tmp_path / 'user'), HERMES_HOME=str(tmp_path / 'state'),
                PYTHONPATH=str(repo), KANBAN_RECOVERY_MODE=mode)
     result = subprocess.run([sys.executable, str(repo / 'tests/gateway/fixtures/kanban_recovery_probe.py')],

@@ -5,12 +5,13 @@ import subprocess
 import sys
 
 import pytest
+from tests.fixtures.child_env import hermes_child_env
 
 
 @pytest.mark.parametrize('populated', [False, True])
 def test_session_observation_preserves_storage(tmp_path, populated):
     repo = Path(__file__).resolve().parents[2]
-    env = {k: os.environ[k] for k in ('PATH', 'SYSTEMROOT', 'LANG', 'TZ') if k in os.environ}
+    env = hermes_child_env(('PATH', 'SYSTEMROOT', 'LANG', 'TZ'))
     env.update(HOME=str(tmp_path), USERPROFILE=str(tmp_path), HERMES_HOME=str(tmp_path / 'profile'), PYTHONPATH=str(repo))
     (tmp_path / 'profile').mkdir()
     code = '''

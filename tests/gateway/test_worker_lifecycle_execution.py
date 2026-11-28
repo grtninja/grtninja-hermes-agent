@@ -16,6 +16,7 @@ import pytest
 from tests.gateway.fixtures.local_recovery_probe import daemon, rpc, websocket
 from tests.gateway.test_worker_agent_execution import Model
 from tests.waiting import async_wait_until
+from tests.fixtures.child_env import hermes_child_env
 
 
 @pytest.mark.platforms("linux")
@@ -32,7 +33,7 @@ def test_worker_lifecycle_then_owner_successor_refuses_late_mutations(tmp_path):
     (home / 'config.yaml').write_text(json.dumps({'gateway': {'multiplex_profiles': False},
         'model': {'provider': 'custom', 'default': 'worker-model', 'base_url': url},
         'auxiliary': {'title_generation': {'enabled': False}}, 'platform_toolsets': {'cli': []}}))
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED'))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(root),
                OPENAI_API_KEY='loopback-only', OPENAI_BASE_URL=url)
 

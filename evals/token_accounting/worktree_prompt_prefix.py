@@ -5,6 +5,8 @@ The subprocesses use isolated HOME/HERMES_HOME and a localhost dummy provider.
 """
 
 import os, sys, json, subprocess, pathlib, hashlib, dataclasses
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[2]))  # this checkout's tests.fixtures
+from tests.fixtures.child_env import hermes_child_env
 
 BASE = pathlib.Path(os.environ["PROBE_OUT"])
 SRC = pathlib.Path(__file__).resolve().parents[2]
@@ -59,20 +61,20 @@ if len(sys.argv) == 1:
     )
     for name in ("worktree-a", "worktree-b"):
         git("worktree", "add", "-b", name, str(BASE / name), cwd=fixture)
-    env = {
-        "PATH": os.environ["PATH"],
-        "HOME": str(home),
-        "HERMES_HOME": str(hh),
-        "PYTHONDONTWRITEBYTECODE": "1",
-        "PYTHONPATH": str(SRC),
-        "PYTHONHASHSEED": "0",
-        "LANG": "C.UTF-8",
-        "TZ": "UTC",
-        "GIT_CONFIG_NOSYSTEM": "1",
-        "GIT_CONFIG_GLOBAL": "/dev/null",
-        "TMPDIR": str(BASE),
-        "PROBE_OUT": str(BASE),
-    }
+    env = hermes_child_env(
+        ("PATH",),
+        HOME=str(home),
+        HERMES_HOME=str(hh),
+        PYTHONDONTWRITEBYTECODE="1",
+        PYTHONPATH=str(SRC),
+        PYTHONHASHSEED="0",
+        LANG="C.UTF-8",
+        TZ="UTC",
+        GIT_CONFIG_NOSYSTEM="1",
+        GIT_CONFIG_GLOBAL="/dev/null",
+        TMPDIR=str(BASE),
+        PROBE_OUT=str(BASE),
+    )
     for name in ("worktree-a", "worktree-b"):
         e = env | {"TERMINAL_CWD": str(BASE / name), "TERMINAL_ENV": "local"}
         with (BASE / (name + ".log")).open("w") as log:

@@ -33,6 +33,7 @@ from tests.gateway.status_report.support import (
     stamped_url,
 )
 from tests.waiting import async_wait_until
+from tests.fixtures.child_env import hermes_child_env
 
 WATCHER = "status_report_watcher"
 
@@ -117,7 +118,7 @@ def test_a_gateway_started_for_a_named_profile_does_not_report(tmp_path, monkeyp
 def test_a_gateway_without_the_stamp_loads_no_status_report_code(tmp_path):
     """Off is off at import too: neither ``import gateway.run`` nor the watcher spawn loads any of
     the reporter when reports are off, and the report code never loads the dashboard's routers."""
-    env = {key: os.environ[key] for key in ("PATH", "SYSTEMROOT", "WINDIR") if key in os.environ}
+    env = hermes_child_env(("PATH", "SYSTEMROOT", "WINDIR"))
     env.update(HOME=str(tmp_path), HERMES_HOME=str(tmp_path / "home"), PYTHONDONTWRITEBYTECODE="1",
                PYTHONPATH=str(Path(__file__).resolve().parents[3]))
     code = ("import json, sys; import gateway.run as run; "

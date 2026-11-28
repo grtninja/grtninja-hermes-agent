@@ -9,6 +9,7 @@ import threading
 
 from tests.gateway.fixtures.cli_launch_policy_probe import Model
 from tests.gateway.fixtures.local_recovery_probe import daemon, websocket, rpc
+from tests.fixtures.child_env import hermes_child_env
 
 
 def probe(tmp_path):
@@ -29,7 +30,7 @@ def probe(tmp_path):
     config = home / 'config.yaml'
     config.write_text(json.dumps(cfg))
     before = config.read_bytes()
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'SYSTEMROOT') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'SYSTEMROOT'))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(root))
     sessions, pids, snapshots = {}, [], {}
     params = {s: dict(request_id=s, cwd=str(home), model='gpt-5-' + s, provider='custom:' + s,

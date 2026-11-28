@@ -19,12 +19,13 @@ import sys
 import pytest
 
 from tests.gateway.test_native_http_auth import daemon
+from tests.fixtures.child_env import hermes_child_env
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
 def _create(home: Path, user: Path, *argv, env=None):
-    base = {k: os.environ[k] for k in ("PATH", "LANG", "TZ") if k in os.environ}
+    base = hermes_child_env(("PATH", "LANG", "TZ"))
     base.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(ROOT),
                 PYTHONUNBUFFERED="1", **(env or {}))
     return subprocess.run([sys.executable, "-m", "hermes_cli.main", "profile", "create", *argv, "--no-alias"],
@@ -119,7 +120,7 @@ def _create_on_profile(home: Path, user: Path, profile: str, *argv, env=None):
             "provision.provision_profile = local\n"
             "from hermes_cli.main import main\n"
             "main()\n")
-    base = {k: os.environ[k] for k in ("PATH", "LANG", "TZ") if k in os.environ}
+    base = hermes_child_env(("PATH", "LANG", "TZ"))
     base.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(ROOT),
                 PYTHONUNBUFFERED="1", **(env or {}))
     return subprocess.run([sys.executable, "-c", code], cwd=ROOT, env=base, capture_output=True, text=True,

@@ -16,6 +16,8 @@ import tempfile
 import threading
 import time
 import urllib.request
+sys.path.append(str(Path(__file__).resolve().parents[2]))  # this checkout's tests.fixtures
+from tests.fixtures.child_env import hermes_child_env
 
 
 def backend(port):
@@ -135,7 +137,7 @@ memory:
   memory_enabled: false
   user_profile_enabled: false
 ''')
-    env = {'PATH': os.environ.get('PATH', ''), 'HOME': str(home / 'user'), 'LANG': 'C.UTF-8'}
+    env = hermes_child_env(('PATH',), HOME=str(home / 'user'), LANG='C.UTF-8')
     (home / 'user').mkdir()
     env.update(HERMES_HOME=str(home), HERMES_DASHBOARD_SESSION_TOKEN='lease-probe',
                PYTHONPATH=str(repo), OPENAI_API_KEY='probe-key')

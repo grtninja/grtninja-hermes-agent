@@ -5,6 +5,7 @@ import subprocess
 import sys
 
 import pytest
+from tests.fixtures.child_env import hermes_child_env
 
 
 @pytest.mark.parametrize("argv", [[], ["chat"], ["-z", "hello"]])
@@ -14,7 +15,7 @@ def test_headless_first_run_exits_with_setup_guidance_before_gateway(tmp_path, a
     user = tmp_path / "user"
     user.mkdir()
     root = Path(__file__).resolve().parents[2]
-    env = {k: os.environ[k] for k in ("PATH", "LANG", "TZ") if k in os.environ}
+    env = hermes_child_env(("PATH", "LANG", "TZ"))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home),
                PYTHONPATH=str(root), PYTHONUNBUFFERED="1")
     result = subprocess.run(

@@ -10,6 +10,7 @@ from unittest.mock import patch
 import pytest
 
 from hermes_cli.models_validate import validate_requested_model
+from tests.fixtures.child_env import hermes_child_env
 
 
 @pytest.mark.parametrize(
@@ -201,14 +202,10 @@ result = model_switch.switch_model(
 )
 print(json.dumps(vars(result)))
 """
-    env = {
-        "HOME": str(tmp_path),
-        "HERMES_HOME": str(tmp_path),
-        "LANG": "C.UTF-8",
-        "OPENROUTER_API_KEY": "key",
-        "PATH": os.environ.get("PATH", ""),
-        "PYTHONIOENCODING": "utf-8",
-    }
+    env = hermes_child_env(
+        ("PATH",), HOME=str(tmp_path), HERMES_HOME=str(tmp_path), LANG="C.UTF-8",
+        OPENROUTER_API_KEY="key", PYTHONIOENCODING="utf-8",
+    )
     completed = subprocess.run(
         [sys.executable, "-c", script],
         cwd=Path(__file__).resolve().parents[2],

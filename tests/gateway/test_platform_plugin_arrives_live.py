@@ -16,6 +16,7 @@ import pytest
 from tests.gateway.test_multiplex_hot_serve_live import control, start_daemon, stop, tail
 from tests.gateway.test_platform_hot_start import _accepts, _closed_port, _free_port
 from tests.waiting import wait_until
+from tests.fixtures.child_env import hermes_child_env
 
 _HOLDER = """
 import fcntl, sys, time
@@ -44,7 +45,7 @@ def _gateway(tmp_path: Path, dotenv: str, *, proxy: str = ""):
     (root / "config.yaml").write_text("gateway:\n  multiplex_profiles: false\n", encoding="utf-8")
     (root / ".env").write_text(dotenv, encoding="utf-8")
     repo = Path(__file__).resolve().parents[2]
-    env = {k: os.environ[k] for k in ("PATH", "LANG", "TZ") if k in os.environ}
+    env = hermes_child_env(("PATH", "LANG", "TZ"))
     closed = proxy or _closed_port()
     env.update(HOME=str(user), HERMES_HOME=str(root), PYTHONPATH=str(repo), PYTHONUNBUFFERED="1",
                HERMES_GATEWAY_LOCK_DIR=str(tmp_path / "locks"), HTTPS_PROXY=closed, HTTP_PROXY=closed,

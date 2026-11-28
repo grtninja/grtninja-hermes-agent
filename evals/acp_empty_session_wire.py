@@ -14,6 +14,8 @@ import sys
 import tempfile
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+sys.path.append(str(Path(__file__).resolve().parents[1]))  # this checkout's tests.fixtures
+from tests.fixtures.child_env import hermes_child_env
 
 
 def main():
@@ -74,7 +76,7 @@ def main():
         'mcp_servers: {}\nmemory:\n  memory_enabled: false\n  user_profile_enabled: false\n'
         'agent:\n  max_iterations: 1\n  disabled_toolsets: [all]\n'
     )
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ'))
     env.update(HOME=str(home), HERMES_HOME=str(hermes), PYTHONPATH=os.pathsep.join([str(repo), os.environ.get('PYTHONPATH', '')]),
                HERMES_ACP_SKIP_CONFIGURED_MCP='1', OPENAI_API_KEY='local-fixture-key',
                OPENAI_BASE_URL=f'http://127.0.0.1:{server.server_port}/v1')

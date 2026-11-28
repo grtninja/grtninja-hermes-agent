@@ -13,6 +13,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
+from tests.fixtures.child_env import hermes_child_env
 
 _REPO = Path(__file__).resolve().parents[2]
 _OLD = 946684800
@@ -112,14 +113,10 @@ def installation(tmp_path):
 
 @contextmanager
 def _provider_process(home: Path, os_temp: Path, stderr_path: Path):
-    env = {
-        "PATH": os.environ.get("PATH", ""),
-        "HOME": str(home),
-        "HERMES_HOME": str(home),
-        "HERMES_RUNTIME_DIR": str(home / "tools"),
-        "TMPDIR": str(os_temp), "TMP": str(os_temp), "TEMP": str(os_temp),
-        "LANG": "C.UTF-8", "TZ": "UTC",
-    }
+    env = hermes_child_env(
+        ("PATH",), HOME=str(home), HERMES_HOME=str(home), HERMES_RUNTIME_DIR=str(home / "tools"),
+        TMPDIR=str(os_temp), TMP=str(os_temp), TEMP=str(os_temp), LANG="C.UTF-8", TZ="UTC",
+    )
     for key in ("SYSTEMROOT", "USERPROFILE", "LOCALAPPDATA"):
         if key in os.environ:
             env[key] = str(home) if key != "SYSTEMROOT" else os.environ[key]

@@ -27,6 +27,7 @@ from typing import Any, Callable, Iterable
 from websockets.sync.client import connect as ws_connect
 
 from tests.fakes.fake_llm_provider import FakeLLMServer, write_hermes_home
+from tests.fixtures.child_env import hermes_child_env
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 READY_RE = re.compile(r"HERMES_BACKEND_READY port=(\d+)")
@@ -71,7 +72,7 @@ def _operator_home() -> str:
 
 def _minimal_env(home: Path, hermes_home: Path, token: str, extra: dict[str, str] | None) -> dict[str, str]:
     """A clean child env: nothing Hermes-, provider- or credential-shaped leaks in from the test runner."""
-    env = {k: os.environ[k] for k in ("PATH", "LANG", "LC_ALL", "TERM", "SYSTEMROOT") if k in os.environ}
+    env = hermes_child_env(("PATH", "LANG", "LC_ALL", "TERM", "SYSTEMROOT"))
     tmpdir = home.parent / "tmp"
     tmpdir.mkdir(parents=True, exist_ok=True)
     env.update(

@@ -11,6 +11,7 @@ import httpx
 import pytest
 
 from tests.gateway.test_normal_runtime_boot import control
+from tests.fixtures.child_env import hermes_child_env
 
 
 @pytest.mark.platforms("linux")
@@ -32,7 +33,7 @@ def test_secondary_native_ticket_implicit_selectors_touch_only_the_secondary_hom
     }))
     launch_before = (home / 'config.yaml').read_bytes()
     root = Path(__file__).resolve().parents[2]
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED'))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(root),
                PYTHONUNBUFFERED='1', HERMES_DASHBOARD_SESSION_TOKEN='normal-http-owner')
     with (tmp_path / 'gateway.log').open('w+') as log:

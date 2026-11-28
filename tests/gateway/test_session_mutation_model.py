@@ -16,6 +16,7 @@ from tests.fixtures.storage_holder import raw_holder
 from tests.fixtures.storage_read import conversation, session_row
 from tests.fixtures.storage_seed import seed_messages
 from tests.gateway.fixtures.storage_handles import close_storage_handles, storage_handle
+from tests.fixtures.child_env import hermes_child_env
 
 
 class CatalogModel(Model):
@@ -70,7 +71,7 @@ def test_model_receipt_changes_next_wire_and_branch_keeps_independent_history(tm
     (home / 'models_dev_cache.json').write_text(json.dumps({'custom': {'id': 'custom', 'models': {
         name: {'id': name, 'name': name, 'limit': {'context': 100000, 'output': 4000}}
         for name in ('original', 'switched')}}}))
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED'))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(root),
                OPENAI_API_KEY='loopback-only', OPENAI_BASE_URL=url, PYTHONUNBUFFERED='1')
 
@@ -184,7 +185,7 @@ def test_desktop_pick_resolves_a_provider_added_after_the_session_and_freezes_on
     (home / 'models_dev_cache.json').write_text(json.dumps({'custom': {'id': 'custom', 'models': {
         name: {'id': name, 'name': name, 'limit': {'context': 100000, 'output': 4000}}
         for name in ('original', 'switched')}}}))
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED'))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(root),
                OPENAI_API_KEY='loopback-only', OPENAI_BASE_URL=origin_url, PYTHONUNBUFFERED='1',
                FOREIGN_KEY='sk-foreign-never')

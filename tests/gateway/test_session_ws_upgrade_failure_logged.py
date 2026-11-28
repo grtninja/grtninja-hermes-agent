@@ -18,6 +18,7 @@ import pytest
 
 from tests.gateway.test_normal_runtime_boot import control
 from tests.waiting import wait_until
+from tests.fixtures.child_env import hermes_child_env
 
 # The owner, with ``tui_gateway.ws.handle_ws`` failing the way the unimportable onboarding module did.
 _BROKEN_OWNER = textwrap.dedent('''
@@ -62,7 +63,7 @@ def test_a_failed_session_upgrade_is_logged_with_its_cause(tmp_path):
         'auxiliary': {'title_generation': {'enabled': False}},
     }))
     root = Path(__file__).resolve().parents[2]
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED'))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home),
                PYTHONPATH=str(root), PYTHONUNBUFFERED='1', OPENAI_API_KEY='loopback-only')
     with (tmp_path / 'owner.out').open('w+') as out:

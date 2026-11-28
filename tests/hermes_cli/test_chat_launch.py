@@ -6,6 +6,7 @@ import subprocess
 import pytest
 
 from hermes_cli.main import PROJECT_ROOT
+from tests.fixtures.child_env import hermes_child_env
 
 
 def test_exit_summary_names_the_launchers_command(tmp_path, monkeypatch, capsys):
@@ -36,7 +37,7 @@ def test_hermes_command_runs_this_install_without_pythonpath(tmp_path):
     home = tmp_path / '.hermes'
     home.mkdir()
     (home / 'config.yaml').write_text('updates:\n  check: false\n', encoding='utf-8')
-    env = {'HERMES_HOME': str(home), 'HOME': str(tmp_path), 'PATH': os.environ.get('PATH', '')}
+    env = hermes_child_env(('PATH',), HERMES_HOME=str(home), HOME=str(tmp_path))
     child = subprocess.run(hermes_command(['--version']), env=env, cwd=str(tmp_path), capture_output=True,
                            text=True, timeout=60, check=False)
     assert child.returncode == 0, child.stderr

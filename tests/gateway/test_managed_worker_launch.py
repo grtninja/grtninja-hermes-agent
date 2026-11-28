@@ -15,6 +15,7 @@ import pytest
 from tests.gateway.fixtures.local_recovery_probe import daemon, rpc, websocket
 from tests.process_scan import children_matching
 from tests.waiting import async_wait_until
+from tests.fixtures.child_env import hermes_child_env
 
 
 class Model(BaseHTTPRequestHandler):
@@ -126,7 +127,7 @@ def test_ordinary_owner_launches_tool_worker_and_detach_does_not_cancel(tmp_path
         config['mcp_servers'] = {'owned': {'command': sys.executable, 'args': [str(home / 'peer.py')]}}
         config['platform_toolsets']['cli'] = ['terminal', 'owned']
     (home / 'config.yaml').write_text(json.dumps(config))
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ', 'TIRITH_ENABLED'))
     audit = tmp_path / 'sqlite-opens.jsonl'
     site = tmp_path / 'audit-site'
     site.mkdir()

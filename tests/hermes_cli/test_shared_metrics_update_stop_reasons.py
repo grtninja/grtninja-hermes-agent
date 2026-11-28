@@ -15,6 +15,7 @@ from hermes_cli import update_receipt
 from hermes_cli.observability import relay_shared_metrics
 from hermes_cli.observability import shared_metrics_contract as contract
 from hermes_cli.observability import shared_metrics_update as update_metrics
+from tests.fixtures.child_env import hermes_child_env
 
 
 @pytest.fixture
@@ -330,7 +331,7 @@ def test_the_bare_bootstrap_interpreter_parks_and_the_next_start_applies_the_gat
     script = ("import json, sys; sys.path.insert(0, sys.argv[1]); from hermes_cli import update_receipt as r; "
               "assert 'ruamel' not in sys.modules; r._publish_shared_metrics(json.loads(sys.argv[2]))")
     subprocess.run([sys.executable, "-I", "-S", "-c", script, str(tree), json.dumps(receipt)], check=True,
-                   env={"HERMES_HOME": str(home), "HOME": str(home.parent), "PATH": os.environ.get("PATH", "")})
+                   env=hermes_child_env(("PATH",), HERMES_HOME=str(home), HOME=str(home.parent)))
     parked = sorted(path.name for path in pending.glob("*.json"))
     assert parked == ["0123456789abcdef0123456789abcdef.json", "earlier.json"]  # nothing emitted, nothing lost
     assert "alice" not in (pending / parked[0]).read_text()

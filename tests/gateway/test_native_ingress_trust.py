@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from tests.fixtures.child_env import hermes_child_env
 
 
 def _probe(tmp_path, mode):
@@ -10,7 +11,7 @@ def _probe(tmp_path, mode):
     home, state = tmp_path / 'home', tmp_path / 'state'
     home.mkdir(exist_ok=True)
     state.mkdir(exist_ok=True)
-    env = {key: os.environ[key] for key in ('PATH', 'SYSTEMROOT', 'LANG', 'TZ') if key in os.environ}
+    env = hermes_child_env(('PATH', 'SYSTEMROOT', 'LANG', 'TZ'))
     env.update(HOME=str(home), USERPROFILE=str(home), HERMES_HOME=str(state), PYTHONPATH=str(repo))
     result = subprocess.run([sys.executable, str(Path(__file__).parent / 'fixtures' /
                              'native_ingress_trust_peer.py'), mode], cwd=tmp_path, env=env,
