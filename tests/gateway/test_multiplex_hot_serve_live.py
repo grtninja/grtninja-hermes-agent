@@ -21,6 +21,7 @@ import pytest
 from websockets.asyncio.client import connect
 
 from tests.waiting import wait_until
+from tests.fixtures.child_env import hermes_child_env
 
 ROOT = Path(__file__).resolve().parents[2]
 # The daemon is a foreground child of the test (never detached), boots a disposable custom root
@@ -43,6 +44,17 @@ def control(home, verb, params=None, timeout=10):
     reply = json.loads(raw.split(b'\n', 1)[0])
     assert reply.get('ok'), reply
     return reply['result']
+
+
+def rescan(home):
+    """``rescan-profiles`` until it reports a finished pass.
+
+    The verb answers ``pending`` (no ``parked``) when the reconcile outlasts its 5 s bound, which a
+    loaded runner hits; the next request queues on the reconcile lock and returns that pass."""
+    def finished():
+        result = control(home, 'rescan-profiles')
+        return None if result.get('pending') else result
+    return wait_until(finished, timeout=60, what='rescan-profiles to finish a pass')
 
 
 @pytest.fixture
@@ -78,7 +90,7 @@ def mux(tmp_path, peer):
     boot = root / 'profiles' / 'boot'
     boot.mkdir(parents=True, mode=0o700)
     (boot / 'config.yaml').write_text(json.dumps(config))
-    env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ') if k in os.environ}
+    env = hermes_child_env(('PATH', 'LANG', 'TZ'))
     env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(root), PYTHONPATH=str(ROOT),
                PYTHONUNBUFFERED='1', OPENAI_API_KEY='loopback-only', OPENAI_BASE_URL=url)
     return {'root': root, 'boot': boot, 'env': env, 'config': config, 'log': tmp_path / 'gateway.log'}
@@ -290,7 +302,7 @@ def test_invalid_hot_profile_config_is_parked_and_unserved(mux):
         added = root / 'profiles' / 'invalid-hot'
         added.mkdir(parents=True, mode=0o700)
         (added / 'config.yaml').write_text(json.dumps(invalid), encoding='utf-8')
-        result = control(root, 'rescan-profiles')
+        result = rescan(root)
         desc = control(root, 'identify')
         assert result['parked'] == ['invalid-hot'], (result, tail(mux))
         assert added.resolve() not in served_homes(desc), desc
@@ -301,7 +313,7 @@ def test_invalid_hot_profile_config_is_parked_and_unserved(mux):
         # into an invalid configuration.
         assert mux['boot'].resolve() in served_homes(desc)
         (mux['boot'] / 'config.yaml').write_text(json.dumps(invalid), encoding='utf-8')
-        result = control(root, 'rescan-profiles')
+        result = rescan(root)
         desc = control(root, 'identify')
         # An explicit control-socket rescan retries parked profiles by design, so the still-invalid
         # 'invalid-hot' is re-parked alongside 'boot' (never served in between).
