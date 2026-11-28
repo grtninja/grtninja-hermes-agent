@@ -15,14 +15,13 @@ import os
 from collections.abc import Callable, Iterable
 
 #: Suite-wide guards a spawned Hermes child must keep, with the value used when
-#: the parent does not carry one (an eval run outside pytest); ``None`` means the
-#: child gets it only from a parent that has it.
+#: the parent does not carry one (an eval run outside pytest).
 #: ``HERMES_DISABLE_LAZY_INSTALLS`` stops on-demand installs and the boot-time
-#: default-plugins installer; ``HERMES_TEST_ISOLATION`` keeps the live state.db
-#: guard armed in the child (#82770).
-SUITE_OPT_OUTS: dict[str, str | None] = {
+#: default-plugins installer. ``HERMES_TEST_ISOLATION`` is deliberately not here:
+#: it also turns on strict tui_gateway contract checks, which changes what the
+#: child answers, and the state.db guard already finds a pytest ancestor.
+SUITE_OPT_OUTS: dict[str, str] = {
     "HERMES_DISABLE_LAZY_INSTALLS": "1",
-    "HERMES_TEST_ISOLATION": None,
 }
 
 
@@ -37,9 +36,6 @@ def hermes_child_env(keep: Iterable[str] | Callable[[str], bool], **overrides: s
     """
     wanted = keep if callable(keep) else frozenset(keep).__contains__
     env = {name: value for name, value in os.environ.items() if wanted(name)}
-    for name, default in SUITE_OPT_OUTS.items():
-        value = os.environ.get(name) or default
-        if value:
-            env[name] = value
+    env.update({name: os.environ.get(name) or default for name, default in SUITE_OPT_OUTS.items()})
     env.update(overrides)
     return env
